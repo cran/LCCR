@@ -13,14 +13,19 @@ function(J,H=1,main=c("LC","same","Rasch"),
   }else{
     if(is.vector(X)){
       S = length(X); ncov = 1
+      covnames = "X1"
       X = array(X,c(S,1,J))
     }
     if(is.matrix(X)){
       S = nrow(X); ncov = ncol(X)
+      covnames = colnames(X)
+      if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       X = array(X,c(S,ncov,J))
     }
     if(is.array(X)){
       S = dim(X)[1]; ncov = dim(X)[2]
+      covnames = colnames(X)
+      if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       if(dim(X)[3]!=J) stop("wrong dimension of covariate array")
     }
   }
@@ -73,26 +78,26 @@ function(J,H=1,main=c("LC","same","Rasch"),
   if(ncov>0){
     if(free_cov=="no"){
       np = np+ncov
-      par_list = c(par_list,paste("cov",1:ncov,sep=""))
+      par_list = c(par_list,covnames)
     }
     if(free_cov=="class"){
       np = np+H*ncov
       if(H==1){
-        par_list = c(par_list,paste("cov",1:ncov,sep=""))
+        par_list = c(par_list,covnames)
       }else{
-        for(h in 1:H) par_list = c(par_list,paste("class",h,".cov",1:ncov,sep=""))
+        for(h in 1:H) par_list = c(par_list,paste("class",h,".",covnames,sep=""))
       }
     }
     if(free_cov=="resp"){
       np = np+J*ncov
-      for(j in 1:J) par_list = c(par_list,paste("resp",j,".cov",1:ncov,sep=""))
+      for(j in 1:J) par_list = c(par_list,paste("resp",j,".",covnames,sep=""))
     }
     if(free_cov=="both"){
       np = np+H*J*ncov
       if(H==1){
-        for(j in 1:J) par_list = c(par_list,paste("resp",j,".cov",1:ncov,sep=""))
+        for(j in 1:J) par_list = c(par_list,paste("resp",j,".",covnames,sep=""))
       }else{
-        for(h in 1:H) for(j in 1:J) par_list = c(par_list,paste("class",h,".resp",j,".cov",1:ncov,sep=""))
+        for(h in 1:H) for(j in 1:J) par_list = c(par_list,paste("class",h,".resp",j,".",covnames,sep=""))
       }
     }
   }

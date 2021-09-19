@@ -15,7 +15,7 @@ estLCCR(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv = 
         free_biv = c("no", "class", "int", "both"),
         free_flag = c("no", "class", "resp", "both"),
         be = NULL, la = NULL, maxit = 5000,
-        verb = TRUE, init_rand = FALSE)
+        verb = TRUE, init_rand = FALSE, se_out = FALSE)
 }
 
 \arguments{
@@ -36,6 +36,7 @@ estLCCR(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv = 
   \item{maxit}{maximum number of iterations of the EM algorithm}
   \item{verb}{to have partial output during the model fitting}
   \item{init_rand}{to use a random initialization of the parameters}
+  \item{se_out}{to require computation of the standard errors}
 }
 
 \value{
@@ -49,6 +50,9 @@ estLCCR(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv = 
   \item{M}{design matrices used for the recursive logit or loglinear parametrization of the conditional distribution of capture configurations given the latent class}
   \item{tauv}{estimate of the weights of each stratum}
   \item{phiv}{estimate of the probability of being never captured for each stratum}
+  \item{seN}{standard error for the estimate of N}
+  \item{sebe}{standard error for the estimate of beta}
+  \item{sela}{standard error for the estimate of lambda}
   \item{lk1}{component of the log-likelihood based on the binomial factor in N}
   \item{lk2}{component of the log-likelihood involving N and the overall probability of being never captured}
   \item{lk3}{component of the log-likelihood involving the capture probabilities}

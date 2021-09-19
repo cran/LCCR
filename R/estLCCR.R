@@ -5,73 +5,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
                     free_cov=c("no","class","resp","both"),
                     free_biv=c("no","class","int","both"),
                     free_flag=c("no","class","resp","both"),be=NULL,la=NULL,
-                    maxit=5000,verb=TRUE,init_rand=FALSE){
-
-# estimate latent class model for capture-recapture data
-#
-# INPUT
-# Y         = matrix of frequencies for each stratum (by row)
-# H         = number of classes
-# model     = loglin for log-linear parametrization,
-#           = logit for recursive logit parametrization
-# W         = matrix of covariates on the class weights (optional)
-# X         = array of covariates (n. strata x n. covariates x n. responses)
-# N         = fixed value of N (optional)
-# biv       = matrix of bivariate interactions
-# flag      = no (no lag effect),
-#             prev (effect of the previous time occasion),
-#             sum (effect of the sum of the previous occasions),
-#             atleast (effect of at least 1 capture in the past)
-# main      = LC (latent class), 
-#             Rasch (additive effect of class and response)
-# free_cov  = no (constant effect wrt to class and response),
-#             class (free effect wrt class),
-#             resp (free effect wrt response),
-#             both (free effect wrt class and response)
-# free_biv  = no (constant effect wrt class and interaction),
-#             class (free effect wrt class),
-#             int (free effect wrt interaction),
-#             both (free effect wrt class and interaction)
-# free_flag = no (constant effect wrt class and interaction),
-#             class (free effect wrt class),
-#             int (free effect wrt interaction),
-#             both (free effect wrt class and interaction)
-# be        = starting values of beta parameters
-# la        = starting values of lambda parameters
-# maxit     = maximum number of iterations
-# verb      = to have partial output
-
-# OUTPUT
-# be     = parameter vector on the class weights
-# la     = parameter vector on the conditional response probabilities
-# lk     = overall log-likelihood
-# N      = estimated values of N
-# np     = overall number of parameters
-# BIC    = BIC index for model selection
-# M      = design matrices
-# lk1-k4 = decomposition of the overal log-likelihood
-#
-# EXAMPLES:
-#
-# estimate latent class model with 2 classes without covariates
-# load("data_sim1.rda")
-# est = estLCCR(Y=data_sim1,H=2)
-#
-# estimate latent class model with 2 classes, same main log-linear effect across lists,
-# one covariate affecting the weight, and bivariate interaction between consecutive lists
-# load("data_sim2.rda")
-# est = estLCCR(Y=data_sim2$Y,H=2,W=data_sim2$W,biv=matrix(c(1,2,3,4,2,3,4,5),4),main="same")
-#
-# estimate a latent class model with 3 classes, one covariate affecting the logits 
-# of each response, and lag dependence
-# load("data_sim3.rda")
-# est = estLCCR(Y=data_sim3$Y,H=3,model="logit",X=data_sim3$X,flag="atleast")
-#
-# estimate a latent class model with 2 classes on stratigied data with covariates
-# affecting botht the class weights and the conditional capture probabilities given
-# the latent class
-# load("data_sim4.rda")
-# est = estLCCR(Y=data_sim4$Y,H=2,X=data_sim4$X,W=data_sim4$W)
+                    maxit=5000,verb=TRUE,init_rand=FALSE,se_out=FALSE){
 
 # ---- preliminaries ----
   model = match.arg(model)
@@ -173,12 +107,12 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   phi = sum(tauv*phiv)
   Pm1 = Pm[,-1]
 # compute log-likelhood
-  lk = lgamma(N+1)-lgamma(N-n+1)+(N-n)*log(phi)+sum(Y1*log(Pm1))+sum(log(tauv))
+  lk = lgamma(N+1)-lgamma(N-n+1)+(N-n)*log(phi)+sum(Y1*log(Pm1))+sum(nv*log(tauv))
   if(verb){
     cat("------------|-------------|-------------|-------------|\n")
     cat("  iteration |      lk     |    lk-lko   |      N      |\n")
     cat("------------|-------------|-------------|-------------|\n")
-    cat(sprintf("%11g", c(0,lk)), "\n", sep = " | ")
+    cat(sprintf("%11g", c(0,lk,NA,N)), "\n", sep = " | ")
   }
 
 # ---- cycle ----
@@ -195,7 +129,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     Tmp = Y; Tmp[,1] = (N-n)*phiv*tauv/phi
     Yh = array(0,c(S,2^J,H))
     for(h in 1:H) Yh[,,h] = Tmp*Pp[,,h]
-    # update be
+# update be
     if(H>1){
       Cl = apply(Yh,c(1,3),sum)
       tot = rowSums(Cl)
@@ -228,7 +162,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
         Fi = Fi+t(Mhs)%*%(tmp*Mhs)
       }
     }
-    if(rcond(Fi)>10^-15) dla = c(solve(Fi,sc)) else dla = ginv(Fi)%*%sc
+    if(rcond(Fi)>10^-15) dla = c(solve(Fi,sc)) else dla = c(ginv(Fi)%*%sc)
     mdla = max(abs(dla))
     if(mdla>0.1) dla = dla/mdla*0.1
     la = la+dla
@@ -283,11 +217,11 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
         N = N+dN
       }
     }
-# compute log-likelhood
+# compute log-likelihood
     lk1 = lgamma(N+1)-lgamma(N-n+1)
     lk2 = (N-n)*log(phi)
     lk3 = sum(Y1*log(Pm1))
-    lk4 = sum(log(tauv))
+    lk4 = sum(nv*log(tauv))
     lk = lk1+lk2+lk3+lk4
 # display partial results
     if(verb & it%%10==0) cat(sprintf("%11g", c(it,lk,lk-lko,N)), "\n", sep = " | ")
@@ -299,13 +233,44 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   if(H>1) names(be) = be_names
   names(la) = out$par_list
 
+
+#---- standard errors ----
+  if(se_out){
+    th = c(N,be,la)
+    out = lkLCCR(th,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)
+    lke = out$lk; st = out$st
+# compute numerical derivative
+    tol = 10^-6
+    DD = matrix(0,1+np1+np2,1+np1+np2)
+    for(j in 1:(1+np1+np2)){
+      th1 = th; th1[j] = th1[j]+tol
+      DD[,j] = (lkLCCR(th1,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)$st-st)/tol
+    }
+    DD = (DD+t(DD))/2
+    if(rcond(DD)>10^-15) tmp = diag(solve(-DD)) else tmp = diag(ginv(-DD))
+    if(any(tmp<0)) warning("negative diagonal elements in the observed information matrix")
+    se = sqrt(tmp)
+    seN = se[1]
+    if(H==1){
+      sebe = NULL
+    }else{
+      sebe = se[1+(1:np2)]
+      names(sebe) = names(be)
+    }
+    sela = se[1+np2+(1:np1)]
+    names(sela) = names(la)
+  }
+
 #---- output ----
   AIC = -2*lk+2*(np)
   BIC = -2*lk+log(n)*(np)
   out = list(be=be,la=la,lk=lk,N=N,np=np,AIC=AIC,BIC=BIC,M=M,tauv=tauv,phiv=phiv,
              lk1=lk1,lk2=lk2,lk3=lk3,lk4=lk4,call = match.call(),
              Y=Y,H=H,model=model,W=W,X=X,biv=biv,flag=flag,main=main,
-             free_cov=free_cov,free_biv=free_biv,free_flag=free_flag)
+             free_cov=free_cov,free_biv=free_biv,free_flag=free_flag,se_out=se_out)
+  if(se_out){
+    out$seN = seN; out$sebe = sebe; out$sela = sela
+  }
   class(out) = "estLCCR"
   return(out)
 

@@ -9,7 +9,7 @@
 \usage{
 aggr_data(Y, W = NULL, X = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{Y}{matrix of frequencies of capture configurations}
   \item{W}{matrix of covariates affecting the class weights}
@@ -23,6 +23,10 @@ aggr_data(Y, W = NULL, X = NULL)
 }
 
 \author{Francesco Bartolucci, Antonio Forcina}
+
+\seealso{
+\code{\link{freq_data}}
+}
 
 \examples{
 # case without covariates

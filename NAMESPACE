@@ -1,8 +1,9 @@
 export("aggr_data", "confint.estLCCR", "design_matrix_logit", "design_matrix_loglin", 
-       "estLCCR", "matrix_logit", "simLCCR", "sq")
+       "estLCCR","freq_data","matrix_logit", "simLCCR", "sq")
 importFrom("stats", "qchisq", "rmultinom", "rnorm")
 importFrom("MASS", "ginv")
 importFrom("graphics", "lines", "text")
+importFrom("stats", "pnorm")
 
 # S3methods
 S3method("confint", "estLCCR")

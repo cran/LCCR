@@ -1,7 +1,9 @@
 print.confLCCR <-
 function(x, ...){
 
-  cat("\nConfidence interval for the populations size based on latent class models for capture recapture data\n")
+  cat("\nConfidence interval for the populations size based on latent class models")
+  cat("\nfor capture recapture data\n")
+  cat("\n")
   cat("Call:\n")
   print(x$call)
   cat("\nAvailable objects:\n")

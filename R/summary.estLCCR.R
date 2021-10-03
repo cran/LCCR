@@ -1,7 +1,7 @@
 summary.estLCCR <-
 function(object, ...){
   
-  cat("\nEstimation of latent class models for capture recapture data\n")
+  cat("\nEstimation of latent class models for capture-recapture data\n")
   cat("\n")
   cat("Call:\n")
   print(object$call)

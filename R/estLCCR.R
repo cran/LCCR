@@ -4,7 +4,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
                     main=c("LC","same","Rasch"),
                     free_cov=c("no","class","resp","both"),
                     free_biv=c("no","class","int","both"),
-                    free_flag=c("no","class","resp","both"),be=NULL,la=NULL,
+                    free_flag=c("no","class","resp","both"),N0=NULL,be0=NULL,la0=NULL,
                     maxit=5000,verb=TRUE,init_rand=FALSE,se_out=FALSE){
 
 # ---- preliminaries ----
@@ -54,23 +54,37 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
 
 #---- starting values ----
   n = sum(nv)
-  if(estN) N = n*1.25
-  if(is.null(la)) if(init_rand){
-    la = rnorm(np1)
-  }else{
-    if(H==1){
-      la = rep(0,np1)
+  if(estN){
+    if(is.null(N0)){
+      if(init_rand) N = n*(1+runif(1)) else N = n*1.25 
     }else{
-      est = estLCCR(Y,1,model=model,main=main)
-      if(main=="LC" || main=="same"){
-        la = NULL
-        for(h in 1:H) la = c(la,est$la+h-H/2)
-      }
-      if(main=="Rasch") la = c(1:(H-1),est$la-(H-1)/2)
-      la = c(la,rep(0,np1-length(la)))
+      N = N0
     }
   }
-  if(is.null(be)) if(H==1) be = NULL else if(init_rand) be = rnorm(np2) else be = rep(0,np2)
+  if(is.null(la0)){
+    if(init_rand){
+      la = rnorm(np1)
+    }else{
+      if(H==1){
+        la = rep(0,np1)
+      }else{
+        est = estLCCR(Y,1,model=model,main=main,verb=verb)
+        if(main=="LC" || main=="same"){
+          la = NULL
+          for(h in 1:H) la = c(la,est$la+h-H/2)
+        }
+        if(main=="Rasch") la = c(1:(H-1),est$la-(H-1)/2)
+        la = c(la,rep(0,np1-length(la)))
+      }
+    }
+  }else{
+    la = la0
+  }
+  if(is.null(be0)){
+    if(H==1) be = NULL else if(init_rand) be = rnorm(np2) else be = rep(0,np2)
+  }else{
+    be = be0
+  }
   if(H==1){
     Piv = matrix(1,S,1)
   }else{

@@ -14,7 +14,7 @@ estLCCR(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv = 
         free_cov = c("no", "class", "resp", "both"),
         free_biv = c("no", "class", "int", "both"),
         free_flag = c("no", "class", "resp", "both"),
-        be = NULL, la = NULL, maxit = 5000,
+        N0 = NULL, be0 = NULL, la0 = NULL, maxit = 5000,
         verb = TRUE, init_rand = FALSE, se_out = FALSE)
 }
 
@@ -31,8 +31,9 @@ estLCCR(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv = 
   \item{free_cov}{"no" for constant effect of the covariates across capture occasions and latent classes; "class" for effect of covariates varying only with the latent class; "resp" for effect of covariates varying only with the capture occasion; "both" for effect of covariates varying with the capture occasion and the latent class}
   \item{free_biv}{"no" for constant bivariate interation effect with respect to the occasion and the latent class; "class" for free interaction with respect to the latent class; "int" for free effect only with respect to the interation; "both" for free effect with respect to interation and latent class (for loglinear parametrization)}
   \item{free_flag}{"no" for constant effect of the previous capture occasions with respect to the occasion and the latent class; "class" for free effect only with respect to the latent class; "int" for free effect only with respect to the occasion; "both" for free effect with respect to capture occasion and latent class (for recursive logit parametrization)}
-  \item{be}{initial value of the parameters affecting the class weights}
-  \item{la}{initial value of the parameters affecting the conditional distribution of capture configurations given the latent class}
+  \item{N0}{initial value of the population size}
+  \item{be0}{initial value of the parameters affecting the class weights}
+  \item{la0}{initial value of the parameters affecting the conditional distribution of capture configurations given the latent class}
   \item{maxit}{maximum number of iterations of the EM algorithm}
   \item{verb}{to have partial output during the model fitting}
   \item{init_rand}{to use a random initialization of the parameters}

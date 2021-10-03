@@ -17,14 +17,12 @@ function(J,H=1,main=c("LC","same","Rasch"),
       S = length(X); ncov = 1
       covnames = "X1"
       X = array(X,c(S,1,J))
-    }
-    if(is.matrix(X)){
+    }else if(is.matrix(X)){
       S = nrow(X); ncov = ncol(X)
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       X = array(X,c(S,ncov,J))
-    }
-    if(is.array(X)){
+    }else{
       S = dim(X)[1]; ncov = dim(X)[2]
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")

@@ -3,7 +3,7 @@ export("aggr_data", "confint.estLCCR", "design_matrix_logit", "design_matrix_log
 importFrom("stats", "qchisq", "rmultinom", "rnorm")
 importFrom("MASS", "ginv")
 importFrom("graphics", "lines", "text")
-importFrom("stats", "pnorm")
+importFrom("stats", "pnorm","runif")
 
 # S3methods
 S3method("confint", "estLCCR")

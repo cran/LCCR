@@ -1,7 +1,7 @@
 print.estLCCR <-
 function(x, ...){
   
-  cat("\nEstimation of latent class models for capture recapture data\n")
+  cat("\nEstimation of latent class models for capture-recapture data\n")
   cat("\n")
   cat("Call:\n")
   print(x$call)

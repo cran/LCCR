@@ -2,7 +2,7 @@ summary.confLCCR <-
 function(object, ...){
 
   cat("\nConfidence interval for the populations size based on latent class models")
-  cat("\nfor capture recapture data\n")
+  cat("\nfor capture-recapture data\n")
   cat("\n")
   cat("Call:\n")
   print(object$call)

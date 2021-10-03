@@ -20,7 +20,7 @@ function(object,parm=0.1,level=0.95,...){
     N = N-step
     out = estLCCR(object$Y,object$H,object$model,object$W,object$X,
                   N,object$biv,object$flag,object$main,object$free_cov,
-                  object$free_biv,object$free_flag,be,la,500,FALSE)
+                  object$free_biv,object$free_flag,be0=be,la0=la,maxit=500,verb=FALSE)
     lk = out$lk
     be = out$be; la = out$la
     Nv = c(N,Nv); lkv = c(lk,lkv)
@@ -35,7 +35,7 @@ function(object,parm=0.1,level=0.95,...){
     N = N+step
     out = estLCCR(object$Y,object$H,object$model,object$W,object$X,
                   N,object$biv,object$flag,object$main,object$free_cov,
-                  object$free_biv,object$free_flag,be,la,500,FALSE)
+                  object$free_biv,object$free_flag,be0=be,la0=la,maxit=500,verb=FALSE)
     lk = out$lk
     be = out$be; la = out$la
     Nv = c(Nv,N); lkv = c(lkv,lk)

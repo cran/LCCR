@@ -1,4 +1,4 @@
-estLCCR <-
+estLCCRcon <-
 function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
                     flag=c("no","prev","sum","atleast"),
                     main=c("LC","same","Rasch"),
@@ -7,6 +7,8 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
                     free_flag=c("no","class","resp","both"),N0=NULL,be0=NULL,la0=NULL,
                     maxit=5000,verb=TRUE,init_rand=FALSE,se_out=FALSE){
 
+# conditional likelihood version
+
 # ---- preliminaries ----
   model = match.arg(model)
   flag = match.arg(flag)
@@ -14,7 +16,6 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   free_cov = match.arg(free_cov)
   free_biv = match.arg(free_biv)
   free_flag = match.arg(free_flag)
-  estN = is.null(N)
   S = nrow(Y)
   J = round(log(ncol(Y))/log(2))
   Y1 = Y[,-1]
@@ -54,12 +55,10 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
 
 #---- starting values ----
   n = sum(nv)
-  if(estN){
-    if(is.null(N0)){
-      if(init_rand) N = n*(1+runif(1)) else N = n*1.25 
-    }else{
-      N = N0
-    }
+  if(is.null(N0)){
+    if(init_rand) N = n*(1+runif(1)) else N = n*1.25 
+  }else{
+    N = N0
   }
   if(is.null(la0)){
     if(init_rand){
@@ -117,11 +116,10 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     Pm = Q[,,1]
   }
   phiv = Pm[,1]
-  tauv = nv/n
-  phi = sum(tauv*phiv)
   Pm1 = Pm[,-1]
+  Qm1 = (1/(1-phiv))*Pm1
 # compute log-likelhood
-  lk = lgamma(N+1)-lgamma(N-n+1)+(N-n)*log(phi)+sum(Y1*log(Pm1))+sum(nv*log(tauv))
+  lk = sum(Y1*log(Qm1))
   if(verb){
     cat("------------|-------------|-------------|-------------|\n")
     cat("  iteration |      lk     |    lk-lko   |      N      |\n")
@@ -140,7 +138,8 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
       Pp = array(0,c(S,2^J,H))
       for(s in 1:S) Pp[s,,] = (1/Pm[s,])*Pj[s,,]
     }
-    Tmp = Y; Tmp[,1] = (N-n)*phiv*tauv/phi
+    Nv = nv/(1-phiv); N = sum(Nv)
+    Tmp = Y; Tmp[,1] = Nv-nv
     Yh = array(0,c(S,2^J,H))
     for(h in 1:H) Yh[,,h] = Tmp*Pp[,,h]
 # update be
@@ -210,32 +209,10 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
       Pm = Q[,,1]
     }
     phiv = Pm[,1]
-    phi = sum(tauv*phiv)
     Pm1 = Pm[,-1]
-# update tau
-    dtauv = Inf
-    while(max(abs(dtauv))>10^-10){
-      dtauv = (nv+(N-n)*phiv*tauv/phi)/N-tauv
-      tauv = tauv+dtauv
-      phi = c(tauv%*%phiv)
-    }
-# update N
-    if(estN){
-      dN = Inf
-      while(abs(dN)/N>10^-10){
-        d1 = digamma(N+1)-digamma(N-n+1)+log(phi)
-        d2 = trigamma(N+1)-trigamma(N-n+1)
-        dN = -d1/d2/max(1,it-10)
-        while(N+dN<n) dN = dN/2
-        N = N+dN
-      }
-    }
+    Qm1 = (1/(1-phiv))*Pm1
 # compute log-likelihood
-    lk1 = lgamma(N+1)-lgamma(N-n+1)
-    lk2 = (N-n)*log(phi)
-    lk3 = sum(Y1*log(Pm1))
-    lk4 = sum(nv*log(tauv))
-    lk = lk1+lk2+lk3+lk4
+    lk = sum(Y1*log(Qm1))
 # display partial results
     if(verb & it%%10==0) cat(sprintf("%11g", c(it,lk,lk-lko,N)), "\n", sep = " | ")
   }
@@ -243,48 +220,50 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     if(it%%10>0) cat(sprintf("%11g", c(it,lk,lk-lko,N)), "\n", sep = " | ")
     cat("------------|-------------|-------------|-------------|\n")
   }
+# estimate N
+  Nv = nv/(1-phiv); N = sum(Nv)
   if(H>1) names(be) = be_names
   names(la) = out$par_list
 
-
 #---- standard errors ----
   if(se_out){
-    th = c(N,be,la)
-    out = lkLCCR(th,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)
-    lke = out$lk; st = out$st
+    th = c(be,la)
+    out = lkLCCRcon(th,np1,np2,model,H,J,S,L,M,X,nv,n,Y1,A,B,sc=TRUE)
+    lke = out$lk; st = out$st; dphiv = out$dphiv
 # compute numerical derivative
     tol = 10^-6
-    DD = matrix(0,1+np1+np2,1+np1+np2)
-    for(j in 1:(1+np1+np2)){
+    DD = matrix(0,np1+np2,np1+np2)
+    for(j in 1:(np1+np2)){
       th1 = th; th1[j] = th1[j]+tol
-      DD[,j] = (lkLCCR(th1,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)$st-st)/tol
+      DD[,j] = (lkLCCRcon(th1,np1,np2,model,H,J,S,L,M,X,nv,n,Y1,A,B,sc=TRUE)$st-st)/tol
     }
     DD = (DD+t(DD))/2
-    if(rcond(DD)>10^-15) tmp = diag(solve(-DD)) else tmp = diag(ginv(-DD))
+    if(rcond(DD)>10^-15) VV = solve(-DD) else VV = ginv(-DD)
+    tmp = diag(VV)
     if(any(tmp<0)) warning("negative diagonal elements in the observed information matrix")
     se = sqrt(tmp)
-    seN = se[1]
     if(H==1){
       sebe = NULL
     }else{
-      sebe = se[1+(1:np2)]
+      sebe = se[(1:np2)]
       names(sebe) = names(be)
     }
-    sela = se[1+np2+(1:np1)]
+    sela = se[np2+(1:np1)]
     names(sela) = names(la)
+    seN = sqrt(t(nv)%*%((1/(1-phiv)^2)*dphiv)%*%VV%*%t((1/(1-phiv)^2)*dphiv)%*%nv)
+    seN = c(seN)
   }
 
 #---- output ----
   AIC = -2*lk+2*(np)
   BIC = -2*lk+log(n)*(np)
-  out = list(be=be,la=la,lk=lk,N=N,np=np,AIC=AIC,BIC=BIC,M=M,tauv=tauv,phiv=phiv,
-             lk1=lk1,lk2=lk2,lk3=lk3,lk4=lk4,call = match.call(),
-             Y=Y,H=H,model=model,W=W,X=X,biv=biv,flag=flag,main=main,
+  out = list(be=be,la=la,lk=lk,N=N,np=np,AIC=AIC,BIC=BIC,M=M,phiv=phiv,
+             call = match.call(),Y=Y,H=H,model=model,W=W,X=X,biv=biv,flag=flag,main=main,
              free_cov=free_cov,free_biv=free_biv,free_flag=free_flag,se_out=se_out)
   if(se_out){
     out$seN = seN; out$sebe = sebe; out$sela = sela
   }
-  class(out) = "estLCCR"
+  class(out) = "estLCCRcon"
   return(out)
 
 }

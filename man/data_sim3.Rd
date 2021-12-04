@@ -23,10 +23,10 @@ Forcina, A. and Bartolucci, F. (2021). Estimating the size of a closed populatio
 }
 
 \examples{
-  \donttest{
-  data(data_sim3)
-  est = estLCCR(Y=data_sim3$Y,H=3,model="logit",X=data_sim3$X,flag="atleast")
-  }
+\donttest{
+data(data_sim3)
+est = estLCCR(Y=data_sim3$Y,H=3,model="logit",X=data_sim3$X,flag="atleast")
+}
 }
 
 \keyword{datasets}

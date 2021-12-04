@@ -1,8 +1,8 @@
 Package: LCCR
 Type: Package
 Title: Latent Class Capture-Recapture Models
-Version: 1.2
-Date: 2021-10-03
+Version: 1.3
+Date: 2021-12-04
 Author: Francesco Bartolucci [aut, cre],
   Antonio Forcina [aut]
 Authors@R: c(person("Francesco", "Bartolucci", role = c("aut","cre"), email = "francesco.bartolucci@unipg.it"), person("Antonio", "Forcina", role = "aut", email = "forcinarosara@gmail.com"))
@@ -12,6 +12,6 @@ License: GPL (>= 2)
 Depends: R (>= 3.5.0)
 Imports: MASS
 NeedsCompilation: no
-Packaged: 2021-10-03 15:08:24 UTC; francescobartolucci
+Packaged: 2021-12-04 20:17:44 UTC; francescobartolucci
 Repository: CRAN
-Date/Publication: 2021-10-03 19:00:02 UTC
+Date/Publication: 2021-12-04 20:30:02 UTC

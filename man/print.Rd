@@ -1,5 +1,6 @@
 \name{print}
 \alias{print.estLCCR}
+\alias{print.estLCCRcon}
 \alias{print.confLCCR}
 
 \title{Print the output}
@@ -7,11 +8,12 @@
 
 \usage{
 \method{print}{estLCCR}(x, ...)
+\method{print}{estLCCRcon}(x, ...)
 \method{print}{confLCCR}(x, ...)
 }
 
 \arguments{
-  \item{x}{output from \code{\link{estLCCR}} or \code{\link{confint.estLCCR}}}
+  \item{x}{output from \code{\link{estLCCR}}, \code{\link{estLCCRcon}} or \code{\link{confint.estLCCR}}}
   \item{...}{further arguments passed to or from other methods}
 }
 

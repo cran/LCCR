@@ -1,10 +1,10 @@
-confint.estLCCR = function(object,parm=list(),level=0.95,...){
+confint.estLCCRcon = function(object,parm=list(),level=0.95,...){
 
 #---- preliminaries ----
   q = qchisq(level,1)
 
 #---- build confidence interval ----
-  lkh = object$lk
+  devh = object$dev
   Nh = object$N
   beta = object$beta
   lambda = object$lambda
@@ -17,95 +17,95 @@ confint.estLCCR = function(object,parm=list(),level=0.95,...){
   if(is.null(parm$mult)) parm$mult = 1.5
   if(is.null(parm$max)) parm$max = 5
   Nv = Nh
-  lkv = lkh
+  devv = devh
   Nv1 = Nh
-  lkv1 = lkh
+  devv1 = devh
   N = round(Nh/parm$step)*parm$step
-  lk = lkh
+  dev = devh
   n = sum(object$Y)
   cat(paste("step =", parm$step))
   cat("\n")
   cat("------------|-------------|-------------|\n")
-  cat("      N     |      lk     |  lk-max(lk) |\n")
+  cat("      N     |     dev     | dev-min(dev)|\n")
   cat("------------|-------------|-------------|\n")
   it = 0
 # iterate for values of N smaller than the point estimate
-  while(2*(lkh-lk)<q*parm$mult & N>n){
+  while(dev-devh<q*parm$mult & N>n){
     it = it+1
     N = N-parm$step
-    out = estLCCR(object$Y,object$H,object$model,object$W,object$X,
+    out = estLCCRcon(object$Y,object$H,object$model,object$W,object$X,
                   N,object$biv,object$flag,object$main,object$free_cov,
                   object$free_biv,object$free_flag,beta0=beta,lambda0=lambda,
                   control=list(maxit=500),verb=FALSE)
-    lk = out$lk
+    dev = out$dev
     be = out$be
     la = out$la
     Nv = c(N,Nv)
-    lkv = c(lk,lkv)
+    devv = c(dev,devv)
     Nv1 = c(N,Nv1)
-    lkv1 = c(lk,lkv1)
-    if(it%%10==0) cat(sprintf("%11g", c(N,lk,lk-lkh)), "\n", sep = " | ")
+    devv1 = c(dev,devv1)
+    if(it%%10==0) cat(sprintf("%11g", c(N,dev,dev-devh)), "\n", sep = " | ")
   }
-  if(it%%10>0) cat(sprintf("%11g", c(N,lk,lk-lkh)), "\n", sep = " | ")
+  if(it%%10>0) cat(sprintf("%11g", c(N,dev,dev-devh)), "\n", sep = " | ")
   cat("------------|-------------|-------------|\n")
   N = round(Nh/parm$step)*parm$step
-  lk = lkh
+  dev = devh
   Nv2 = Nh
-  lkv2 = lkh
+  devv2 = devh
   be = object$be
   la = object$la
   it = 0
 # iterate for values of N greater than the point estimate
-  while(2*(lkh-lk)<q*parm$mult & N<parm$max*Nh){
+  while(dev-devh<q*parm$mult & N<parm$max*Nh){
     it = it+1
     N = N+parm$step
-    out = estLCCR(object$Y,object$H,object$model,object$W,object$X,
+    out = estLCCRcon(object$Y,object$H,object$model,object$W,object$X,
                   N,object$biv,object$flag,object$main,object$free_cov,
-                  object$free_biv,object$free_flag,beta0=beta,lambda0=lambda,
-                  control=list(maxit=500),verb=FALSE)
-    lk = out$lk
+                  object$free_biv,object$free_flag,beta0=beta,lambda0=lambda,control=list(maxit=500),
+                  verb=FALSE)
+    dev = out$dev
     be = out$be
     la = out$la
     Nv = c(Nv,N)
-    lkv = c(lkv,lk)
+    devv = c(devv,dev)
     Nv2 = c(Nv2,N)
-    lkv2 = c(lkv2,lk)
-    if(it%%10==0) cat(sprintf("%11g", c(N,lk,lk-lkh)), "\n", sep = " | ")
+    devv2 = c(devv2,dev)
+    if(it%%10==0) cat(sprintf("%11g", c(N,dev,dev-devh)), "\n", sep = " | ")
   }
-  if(it%%10>0) cat(sprintf("%11g", c(N,lk,lk-lkh)), "\n", sep = " | ")
+  if(it%%10>0) cat(sprintf("%11g", c(N,dev,dev-devh)), "\n", sep = " | ")
   cat("------------|-------------|-------------|\n")
 
 #---- find limits ----
-  ta = lkh-q/2
+  ta = devh+q
   err = FALSE
   ind1 = NULL
-  if(length(Nv1)>1) for(j in 1:(length(Nv1)-1)) if(lkv1[j]<=ta & ta<lkv1[j+1]) ind1 = j
+  if(length(Nv1)>1) for(j in 1:(length(Nv1)-1)) if(devv1[j]>=ta & ta>devv1[j+1]) ind1 = j
   if(is.null(ind1)){
-    ind1 = which.min(abs(lkh-lkv1-q/2))
+    ind1 = which.min(abs(devv1-devh-q))
     N1 = Nv1[ind1]
-    lk1 = lkv1[ind1]
+    dev1 = devv1[ind1]
     err = TRUE
   }else{
-    N1 = Nv1[ind1]+(ta-lkv1[ind1])/(lkv1[ind1+1]-lkv1[ind1])*(Nv1[ind1+1]-Nv1[ind1])
-    lk1 = ta
+    N1 = Nv1[ind1]+(ta-devv1[ind1])/(devv1[ind1+1]-devv1[ind1])*(Nv1[ind1+1]-Nv1[ind1])
+    dev1 = ta
   }
-  ind2= NULL
-  if(length(Nv2)>1) for(j in 1:(length(Nv2)-1)) if(lkv2[j]>ta & ta>=lkv2[j+1]) ind2 = j
+  ind2 = NULL
+  if(length(Nv2)>1) for(j in 1:(length(Nv2)-1)) if(devv2[j]<ta & ta<=devv2[j+1]) ind2 = j
   if(is.null(ind2)){
-    ind2 = which.min(abs(lkh-lkv2-q/2))
+    ind2 = which.min(abs(devv2-devh-q))
     N2 = Nv2[ind2]
-    lk2 = lkv2[ind2]
+    dev2 = devv2[ind2]
     err = TRUE
   }else{
-    N2 = Nv2[ind2+1]+(ta-lkv2[ind2+1])/(lkv2[ind2]-lkv2[ind2+1])*(Nv2[ind2]-Nv2[ind2+1])
-    lk2 = ta
+    N2 = Nv2[ind2+1]+(ta-devv2[ind2+1])/(devv2[ind2]-devv2[ind2+1])*(Nv2[ind2]-Nv2[ind2+1])
+    dev2 = ta
   }
   conf = c(N1,N2)
 
 #---- output ----
-  out = list(conf=conf,Nv=Nv,lkv=lkv,level=level,Nh=Nh,lkh=lkh,lk1=lk1,lk2=lk2,
+  out = list(conf=conf,Nv=Nv,devv=devv,level=level,Nh=Nh,devh=devh,dev1=dev1,dev2=dev2,
              step=parm$step,err=err,call = match.call())
-  class(out) = "confLCCR"
+  class(out) = "confLCCRcon"
   return(out)
 
 }

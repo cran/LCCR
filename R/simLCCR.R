@@ -1,12 +1,11 @@
-simLCCR <-
-function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
-                    biv=NULL,flag=c("no","prev","sum","atleast"),
-                    main=c("LC","same","Rasch"),
-                    free_cov=c("no","class","resp","both"),
-                    free_biv=c("no","class","int","both"),
-                    free_flag=c("no","class","resp","both")){
+simLCCR = function(H,J,beta,lambda,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
+                   biv=NULL,flag=c("no","prev","sum","atleast"),
+                   main=c("LC","same","Rasch"),
+                   free_cov=c("no","class","resp","both"),
+                   free_biv=c("no","class","int","both"),
+                   free_flag=c("no","class","resp","both")){
 
-# ---- preliminaries ----
+#---- preliminaries ----
   model = match.arg(model)
   flag = match.arg(flag)
   main = match.arg(main)
@@ -37,7 +36,8 @@ function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
     if(ncov2>0) for(s in 1:S) L[s,,] = Tmp%x%t(c(1,Wc[s,]))
   }
   if(model=="logit"){
-    A = out$A; B = out$B
+    A = out$A
+    B = out$B
   }
   M = out$M
   np1 = length(out$par_list)
@@ -51,7 +51,7 @@ function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
     Piv = matrix(0,S,H)
     for(s in 1:S){
       Ls = as.matrix(L[s,,])
-      tmp = exp(Ls%*%be)
+      tmp = exp(Ls%*%beta)
       Piv[s,] = tmp/sum(tmp)
     }
   }
@@ -62,15 +62,15 @@ function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
     for(h in 1:H){
       if(is.null(Xc)) Msh = as.matrix(M[,,h,1]) else Msh = as.matrix(M[,,h,s])
       if(model=="loglin"){
-        tmp = exp(c(Msh%*%la))
+        tmp = exp(c(Msh%*%lambda))
         Q[s,,h] = tmp/sum(tmp)
       }
-      if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%la-B%*%log(1+exp(Msh%*%la)))
+      if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%lambda-B%*%log(1+exp(Msh%*%lambda)))
     }
     if(aggr_data) Pm[s,] = Q[s,,]%*%Piv[s,]
   }
 
-# ---- simulate ----
+#---- simulate ----
 # individual data
   if(!aggr_data){
     SQ = sq(J)
@@ -80,7 +80,8 @@ function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
   Yc = matrix(0,S,2^J)
   if(aggr_data){
     for(i in 1:S) Yc[i,] = rmultinom(1,N[i],Pm[i,])
-    Y = Yc; Y[,1] = 0
+    Y = Yc
+    Y[,1] = 0
     ind = which(rowSums(Y[,-1])>0)
     Y = Y[ind,]
   }else{
@@ -103,12 +104,14 @@ function(H,J,be,la,N,model=c("loglin","logit"),Wc=NULL,Xc=NULL,
     if(is.matrix(Xc)) X = Xc[ind,]
   }
 
-  #---- output ----
+#---- output ----
   out = list(Y=Y,Yc=Yc,Piv=Piv,Q=Q)
   if(aggr_data){
     Pm = Pm
   }else{
-    out$R=R; out$U=U; out$Rc=Rc
+    out$R=R
+    out$U=U
+    out$Rc=Rc
   }
   if(!is.null(Wc)) out$W = W
   if(!is.null(Xc)) out$X = X

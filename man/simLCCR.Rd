@@ -9,8 +9,8 @@ The function simulates capture-recapture data from a latent class model with ind
 }
 
 \usage{
-simLCCR(H, J, be, la, N, model = c("loglin", "logit"), Wc = NULL, Xc = NULL, biv = NULL,
-        flag = c("no", "prev", "sum", "atleast"),
+simLCCR(H, J, beta, lambda, N, model = c("loglin", "logit"), Wc = NULL, Xc = NULL, 
+        biv = NULL, flag = c("no", "prev", "sum", "atleast"),
         main = c("LC", "same", "Rasch"), 
         free_cov = c("no", "class", "resp", "both"),
         free_biv = c("no", "class", "int", "both"),
@@ -20,8 +20,8 @@ simLCCR(H, J, be, la, N, model = c("loglin", "logit"), Wc = NULL, Xc = NULL, biv
 \arguments{
   \item{H}{number of latent classes}
   \item{J}{number of capture occasions}
-  \item{be}{value of the parameters affecting the class weights}
-  \item{la}{value of the parameters affecting the conditional distribution of capture configurations given the latent}
+  \item{beta}{value of the parameters affecting the class weights}
+  \item{lambda}{value of the parameters affecting the conditional distribution of capture configurations given the latent}
   \item{N}{population size (with individual data); vector containing the size of any stratum (with aggregated data)}
   \item{model}{population size (with individual data); vector containing the size of any stratum (with aggregated data)}
   \item{Wc}{matrix of covariates affecting the class weights at population level}
@@ -62,16 +62,17 @@ out = simLCCR(2,5,be=0,la=c(rep(-1,5),rep(1,5)),N=200)
 # simulate data from a latent class model with 2 classes, one covariate affecting the weights and 
 # bivariate loglinear interactions between consecutive lists
 Wc = rnorm(200)
-out = simLCCR(2,6,be=c(0,1),la=c(-1,1,1),N=200,Wc=Wc,biv=matrix(c(1,2,3,4,2,3,4,5),4),main="same")
+out = simLCCR(2,6,beta=c(0,1),lambda=c(-1,1,1),N=200,Wc=Wc,biv=matrix(c(1,2,3,4,2,3,4,5),4),
+              main="same")
 
 # simulate data from a latent class model with 3 classes, one covariate affecting the logits of 
 # each response, and lag dependence
 Xc = rnorm(200)
-out = simLCCR(3,6,model="logit",be=c(0,0),la=c(rep(-1,6),rep(0,6),rep(1,6),1,1),N=200,Xc=Xc,
-              flag="atleast")
+out = simLCCR(3,6,model="logit",beta=c(0,0),lambda=c(rep(-1,6),rep(0,6),rep(1,6),1,1),
+              N=200,Xc=Xc,flag="atleast")
 
 # simulate data from latent class model with 2 classes and covariates affecting both class weights
 # and conditional probabilities of capture configurations given the latent class
 Wc = c(-1,0,1); Xc = rnorm(3)
-out = simLCCR(2,5,be=c(0,0),la=c(rep(-1,5),rep(1,5),1),N=c(100,100,100),Wc=Wc,Xc=Xc)
+out = simLCCR(2,5,beta=c(0,0),lambda=c(rep(-1,5),rep(1,5),1),N=c(100,100,100),Wc=Wc,Xc=Xc)
 }

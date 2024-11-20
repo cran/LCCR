@@ -1,27 +1,32 @@
-design_matrix_loglin <-
-function(J,H=1,main=c("LC","same","Rasch"),
-                                 X=NULL,free_cov=c("no","class","resp","both"),
-                                 biv=NULL,free_biv=c("no","class","int","both")){
+design_matrix_loglin = function(J,H=1,main=c("LC","same","Rasch"),
+                                X=NULL,free_cov=c("no","class","resp","both"),
+                                biv=NULL,free_biv=c("no","class","int","both")){
 
-# ---- preliminaries ----
+#---- preliminaries ----
   if(J<2) stop("J must be at least 2")
   main = match.arg(main)
   free_cov = match.arg(free_cov)
   free_biv = match.arg(free_biv)
+# if there are no covariates X
   if(is.null(X)){
-    S = 1; ncov = 0
+    S = 1
+    ncov = 0
+# if there are covariates X
   }else{
     if(is.vector(X)){
-      S = length(X); ncov = 1
+      S = length(X)
+      ncov = 1
       covnames = "X1"
       X = array(X,c(S,1,J))
     }else if(is.matrix(X)){
-      S = nrow(X); ncov = ncol(X)
+      S = nrow(X)
+      ncov = ncol(X)
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       X = array(X,c(S,ncov,J))
     }else{
-      S = dim(X)[1]; ncov = dim(X)[2]
+      S = dim(X)[1]
+      ncov = dim(X)[2]
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       if(dim(X)[3]!=J) stop("wrong dimension of covariate array")
@@ -34,7 +39,7 @@ function(J,H=1,main=c("LC","same","Rasch"),
     nbiv = nrow(biv)
   }
 
-# ---- main and bivariate effects ----
+#---- main and bivariate effects ----
   Main = sq(J)
   if(nbiv==0){
     Int = NULL
@@ -127,12 +132,13 @@ function(J,H=1,main=c("LC","same","Rasch"),
     }
   }
 
-# ----- design matrices ----
+#----- design matrices ----
   M = array(0,c(2^J,np,H,S))
   for(s in 1:S){
     for(h in 1:H){
 # main effects
-      tmp = matrix(0,1,H); tmp[h] = 1
+      tmp = matrix(0,1,H)
+      tmp[h] = 1
       if(main=="LC") Tmp1 = tmp%x%Main
       if(main=="same") Tmp1 = tmp%x%as.matrix(rowSums(Main))
       if(main=="Rasch") Tmp1 = cbind(rep(1,2^J)%o%c(tmp[-1]),Main)

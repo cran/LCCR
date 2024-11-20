@@ -1,7 +1,7 @@
-print.confLCCR = function(x, ...){
+print.confLCCRcon = function(x, ...){
 
-#---- print output of confLCCR ---
-  cat("\nConfidence interval for the populations size based on latent class models")
+#---- print output of confLCCRcon ---
+  cat("\nConfidence interval for the populations size based on latent class models and CML method")
   cat("\nfor capture-recapture data\n")
   cat("\n")
   cat("Call:\n")

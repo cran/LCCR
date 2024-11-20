@@ -1,7 +1,6 @@
-sq <-
-function(J,t=NULL){
+sq = function(J,t=NULL){
 
-# generate matrix
+#---- generate matrix ----
   M = NULL
   if(J>=1){
     if(is.null(t)){   # se non viene dato t
@@ -30,7 +29,7 @@ function(J,t=NULL){
     }
   }
 
-# output
+#---- output ----
   return(M)
 
 }

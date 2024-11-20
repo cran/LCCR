@@ -1,7 +1,7 @@
-print.estLCCRcon <-
-function(x, ...){
-  
-  cat("\nEstimation of latent class models for capture-recapture data\n")
+print.estLCCRcon = function(x, ...){
+
+#---- print output of estLCCRcon ---
+  cat("\nEstimation of latent class models for capture-recapture data with CML method with CML method\n")
   cat("\n")
   cat("Call:\n")
   print(x$call)

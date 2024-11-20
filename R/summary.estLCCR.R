@@ -1,6 +1,6 @@
-summary.estLCCR <-
-function(object, ...){
-  
+summary.estLCCR = function(object, ...){
+
+#---- summarize output of estLCCR ---
   cat("\nEstimation of latent class models for capture-recapture data\n")
   cat("\n")
   cat("Call:\n")
@@ -20,22 +20,22 @@ function(object, ...){
   if(object$H>1){
     if(object$se_out){
       cat("\nParameters affecting the class weights:\n")
-      tt = object$be/object$sebe
+      tt = object$beta/object$sebeta
       pv = 2*(1-pnorm(abs(tt)))
-      Tab = cbind("est."=object$be,"s.e."=object$sebe,"t-test"=tt,"p-value"=pv)
+      Tab = cbind("est."=object$beta,"s.e."=object$sebeta,"t-test"=tt,"p-value"=pv)
       print(Tab)
     }else{
-      print(object$be)
+      print(object$beta)
     }
   }
   cat("\nParameters affecting the conditional capture probabilities given the latent class:\n")
   if(object$se_out){
-    tt = object$la/object$sela
+    tt = object$lambda/object$selambda
     pv = 2*(1-pnorm(abs(tt)))
-    Tab = cbind("est."=object$la,"s.e."=object$sela,"t-test"=tt,"p-value"=pv)
+    Tab = cbind("est."=object$lambda,"s.e."=object$selambda,"t-test"=tt,"p-value"=pv)
     print(Tab)
   }else{
-    print(object$la)
+    print(object$lambda)
   }
 
 }

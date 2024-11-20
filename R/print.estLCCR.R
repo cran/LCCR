@@ -1,6 +1,6 @@
-print.estLCCR <-
-function(x, ...){
-  
+print.estLCCR = function(x, ...){
+
+  #---- print output of estLCCR ---
   cat("\nEstimation of latent class models for capture-recapture data\n")
   cat("\n")
   cat("Call:\n")

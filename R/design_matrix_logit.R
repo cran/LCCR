@@ -1,65 +1,74 @@
-design_matrix_logit <-
-function(J,H=1,main=c("LC","same","Rasch"),
-                                X=NULL,free_cov=c("no","class","resp","both"),
-                                flag=c("no","prev","sum","atleast"),
-                                free_flag=c("no","class","resp","both")){
+design_matrix_logit = function(J,H=1,main=c("LC","same","Rasch"),
+                               X=NULL,free_cov=c("no","class","resp","both"),
+                               flag=c("no","prev","sum","atleast"),
+                               free_flag=c("no","class","resp","both")){
 
-# ---- preliminaries ----
+#---- preliminaries ----
   if(J<2) stop("J must be at least 2")
   main = match.arg(main)
   free_cov = match.arg(free_cov)
   flag = match.arg(flag)
   free_flag = match.arg(free_flag)
+# if there are no covariates X
   if(is.null(X)){
-    S = 1; ncov = 0
+    S = 1
+    ncov = 0
+# if there are covariates X
   }else{
     if(is.vector(X)){
-      S = length(X); ncov = 1
+      S = length(X)
+      ncov = 1
       covnames = "X1"
       X = array(X,c(S,1,J))
     }else if(is.matrix(X)){
-      S = nrow(X); ncov = ncol(X)
+      S = nrow(X)
+      ncov = ncol(X)
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       X = array(X,c(S,ncov,J))
     }else{
-      S = dim(X)[1]; ncov = dim(X)[2]
+      S = dim(X)[1]
+      ncov = dim(X)[2]
       covnames = colnames(X)
       if(is.null(covnames)) covnames = paste("X",1:ncov,sep="")
       if(dim(X)[3]!=J) stop("wrong dimension of covariate array")
     }
   }
 
-# ---- main and bivariate effects ----
+#---- main and bivariate effects ----
   Main = c(1,rep(0,J-1))
   for(j in 2:J){
-    tmp = rep(0,J); tmp[j] = 1
+    tmp = rep(0,J)
+    tmp[j] = 1
     Main = rbind(Main,rep(1,2^(j-1))%o%tmp)
   }
   if(flag=="no") Int = NULL
   if(flag=="prev"){
     Int = rep(0,J-1)
     for(j in 2:J){
-      tmp = matrix(0,1,J-1); tmp[j-1] = 1
+      tmp = matrix(0,1,J-1)
+      tmp[j-1] = 1
       Int = rbind(Int,tmp%x%sq(j-1)[,j-1,drop=FALSE])
     }
   }
   if(flag=="sum"){
     Int = rep(0,J-1)
     for(j in 2:J){
-      tmp = matrix(0,1,J-1); tmp[j-1] = 1
+      tmp = matrix(0,1,J-1)
+      tmp[j-1] = 1
       Int = rbind(Int,tmp%x%as.matrix(rowSums(sq(j-1))))
     }
   }
   if(flag=="atleast"){
     Int = 0
     for(j in 2:J){
-      tmp = matrix(0,1,J-1); tmp[j-1] = 1
+      tmp = matrix(0,1,J-1)
+      tmp[j-1] = 1
       Int = rbind(Int,tmp%x%as.matrix(rowSums(sq(j-1)))>0)
     }
   }
 
-# ----- number and list of parameters ----
+#----- number and list of parameters ----
 # main effects
   if(main=="LC"){
     np = J*H
@@ -143,14 +152,16 @@ function(J,H=1,main=c("LC","same","Rasch"),
     }
   }
 
-# ----- design matrices ----
+#----- design matrices ----
   out = matrix_logit(J)
-  A = out$A; B = out$B
+  A = out$A
+  B = out$B
   M = array(0,c(2^J-1,np,H,S))
   for(s in 1:S){
     for(h in 1:H){
 # main effects
-      tmp = matrix(0,1,H); tmp[h] = 1
+      tmp = matrix(0,1,H)
+      tmp[h] = 1
       if(main=="LC") Tmp1 = tmp%x%Main
       if(main=="same") Tmp1 = tmp%x%as.matrix(rowSums(Main))
       if(main=="Rasch") Tmp1 = cbind(rep(1,2^J-1)%o%c(tmp[-1]),Main)

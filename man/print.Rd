@@ -2,6 +2,7 @@
 \alias{print.estLCCR}
 \alias{print.estLCCRcon}
 \alias{print.confLCCR}
+\alias{print.confLCCRcon}
 
 \title{Print the output}
 \description{Given the output, it is written in a readable form.}

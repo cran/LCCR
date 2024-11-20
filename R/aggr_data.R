@@ -1,9 +1,9 @@
-aggr_data <-
-function(Y,W=NULL,X=NULL){
+aggr_data = function(Y,W=NULL,X=NULL){
   
-# ---- aggregate ----
+#---- if only Y argument is provided ----
   if(is.null(W) & is.null(X)){
     Ya = t(colSums(Y))
+#---- if also W or X are provided ----
   }else{
     n = nrow(Y); J = ncol(Y)
     if(is.null(W)){
@@ -33,15 +33,18 @@ function(Y,W=NULL,X=NULL){
     WX = cbind(W,XX)
     WXa = unique(WX)
     I = nrow(WXa)
+# matrix of aggregated responses
     Ya = matrix(0,I,J)
     for(i in 1:n){
       ind = apply(WXa,1,function(x) identical(x,WX[i,]))
       Ya[ind,] = Ya[ind,]+Y[i,]
     }
+# matrix of distinct rows in W
     if(nc1>0){
       Wa = WXa[,1:nc1]
       if(is.matrix(W)) Wa = as.matrix(Wa)
     }
+# array of distinct matrices in X
     if(nc2>0){
       Xa = WXa[,nc1+(1:nc2)]
       if(is.matrix(X)) Xa = as.matrix(Xa)
@@ -50,7 +53,7 @@ function(Y,W=NULL,X=NULL){
     
   }
 
-# ---- output ----
+#---- output ----
   out = list(Ya=Ya)
   if(!is.null(W)) out$Wa=Wa
   if(!is.null(X)) out$Xa=Xa

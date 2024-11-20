@@ -1,13 +1,22 @@
-estLCCR <-
-function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
-                    flag=c("no","prev","sum","atleast"),
-                    main=c("LC","same","Rasch"),
-                    free_cov=c("no","class","resp","both"),
-                    free_biv=c("no","class","int","both"),
-                    free_flag=c("no","class","resp","both"),N0=NULL,be0=NULL,la0=NULL,
-                    maxit=5000,verb=TRUE,init_rand=FALSE,se_out=FALSE){
+estLCCR = function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
+                   flag=c("no","prev","sum","atleast"),
+                   main=c("LC","same","Rasch"),
+                   free_cov=c("no","class","resp","both"),
+                   free_biv=c("no","class","int","both"),
+                   free_flag=c("no","class","resp","both"),N0=NULL,beta0=NULL,lambda0=NULL,
+                   control=list(),verb=TRUE,init_rand=FALSE,se_out=FALSE){
 
-# ---- preliminaries ----
+#---- check and fix input arguments ----
+  if(H<1) stop("Number of classes cannot be smaller than 1")
+  if(!is.numeric(Y)) stop("Y must be numeric")
+  if(!is.null(W)) if(!is.numeric(W)) stop("W must be numeric")
+  if(!is.null(X)) if(!is.numeric(X)) stop("X must be numeric")
+  if(!is.null(N)) if(!is.numeric(N)) stop("N must be numeric")
+  if(!is.null(biv)) if(!is.numeric(biv)) stop("biv must be numeric")
+  if(is.null(control$maxit)) control$maxit = 5000
+  if(is.null(control$reltol)) control$reltol = 10^-10
+
+#---- preliminaries ----
   model = match.arg(model)
   flag = match.arg(flag)
   main = match.arg(main)
@@ -17,10 +26,12 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   estN = is.null(N)
   S = nrow(Y)
   J = round(log(ncol(Y))/log(2))
-  Y1 = Y[,-1]
+  Y1 = matrix(Y[,-1],S,2^J-1)
   nv = rowSums(Y)
+# if there are no covariates W
   if(is.null(W)){
     ncov2 = 0
+# if there are covariates W
   }else{
     if(is.vector(W)) W = as.matrix(W)
     ncov2 = ncol(W)
@@ -33,11 +44,11 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
       Wnames = colnames(W)
       if(is.null(Wnames)) Wnames = paste("W",1:ncov2,sep="")
     }
-    be_names = NULL
+    beta_names = NULL
     for(h in 2:H) if(ncov2>0){
-      be_names = c(be_names,paste("class",h,".int",sep=""),paste("class",h,".",Wnames,sep=""))
+      beta_names = c(beta_names,paste("class",h,".int",sep=""),paste("class",h,".",Wnames,sep=""))
     }else{
-      be_names = c(be_names,paste("class",h,".int",sep=""))
+      beta_names = c(beta_names,paste("class",h,".int",sep=""))
     }
   }
   if(model=="loglin") out = design_matrix_loglin(J,H,main,X,free_cov,biv,free_biv)
@@ -46,7 +57,8 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   Tmp = diag(H)[,-1,drop=FALSE]
   for(s in 1:S) L[s,,] = Tmp%x%t(c(1,W[s,]))
   if(model=="logit"){
-    A = out$A; B = out$B
+    A = out$A
+    B = out$B
   }
   M = out$M
   np1 = length(out$par_list)
@@ -54,6 +66,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
 
 #---- starting values ----
   n = sum(nv)
+# starting value of N
   if(estN){
     if(is.null(N0)){
       if(init_rand) N = n*(1+runif(1)) else N = n*1.25 
@@ -61,29 +74,31 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
       N = N0
     }
   }
-  if(is.null(la0)){
+# starting value of lambda
+  if(is.null(lambda0)){
     if(init_rand){
-      la = rnorm(np1)
+      lambda = rnorm(np1)
     }else{
       if(H==1){
-        la = rep(0,np1)
+        lambda = rep(0,np1)
       }else{
-        est = estLCCR(Y,1,model=model,main=main,verb=verb)
+        est = estLCCR(Y,1,model=model,main=main,verb=verb,control=control)
         if(main=="LC" || main=="same"){
-          la = NULL
-          for(h in 1:H) la = c(la,est$la+h-H/2)
+          lambda = NULL
+          for(h in 1:H) lambda = c(lambda,est$lambda+h-H/2)
         }
-        if(main=="Rasch") la = c(1:(H-1),est$la-(H-1)/2)
-        la = c(la,rep(0,np1-length(la)))
+        if(main=="Rasch") lambda = c(1:(H-1),est$lambda-(H-1)/2)
+        lambda = c(lambda,rep(0,np1-length(lambda)))
       }
     }
   }else{
-    la = la0
+    lambda = lambda0
   }
-  if(is.null(be0)){
-    if(H==1) be = NULL else if(init_rand) be = rnorm(np2) else be = rep(0,np2)
+# starting value of beta
+  if(is.null(beta0)){
+    if(H==1) beta = NULL else if(init_rand) beta = rnorm(np2) else beta = rep(0,np2)
   }else{
-    be = be0
+    beta = beta0
   }
   if(H==1){
     Piv = matrix(1,S,1)
@@ -91,7 +106,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     Piv = matrix(0,S,H)
     for(s in 1:S){
       Ls = as.matrix(L[s,,])
-      tmp = exp(Ls%*%be)
+      tmp = exp(Ls%*%beta)
       Piv[s,] = tmp/sum(tmp)
     }
   }
@@ -102,10 +117,10 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     for(h in 1:H){
       if(is.null(X)) Msh = as.matrix(M[,,h,1]) else Msh = as.matrix(M[,,h,s])
       if(model=="loglin"){
-        tmp = exp(c(Msh%*%la))
+        tmp = exp(c(Msh%*%lambda))
         Q[s,,h] = tmp/sum(tmp)
       }
-      if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%la-B%*%log(1+exp(Msh%*%la)))
+      if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%lambda-B%*%log(1+exp(Msh%*%lambda)))
     }
     if(H>1){
       Pj[s,,] = Q[s,,]*(rep(1,2^J)%o%Piv[s,])
@@ -114,7 +129,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
   }
   if(H==1){
     Pj = Q
-    Pm = Q[,,1]
+    Pm = matrix(Q[,,1],S,2^J)
   }
   phiv = Pm[,1]
   tauv = nv/n
@@ -129,63 +144,72 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     cat(sprintf("%11g", c(0,lk,NA,N)), "\n", sep = " | ")
   }
 
-# ---- cycle ----
-  it = 0; lko = lk
-  while((abs(lk-lko)/abs(lko)>10^-10 | it==0) & it<maxit){
-    it = it+1; lko = lk
-# E-step to update be and La
+#---- cycle ----
+  dM1 = dim(M)[1]
+  dM2 = dim(M)[2]
+  it = 0
+  lko = lk
+  while((abs(lk-lko)/abs(lko)>control$reltol | it==0) & it<control$maxit){
+    it = it+1
+    lko = lk
+# E-step to update beta and lambda
     if(H==1){
       Pp = array(1,c(S,2^J,H))
     }else{
       Pp = array(0,c(S,2^J,H))
       for(s in 1:S) Pp[s,,] = (1/Pm[s,])*Pj[s,,]
     }
-    Tmp = Y; Tmp[,1] = (N-n)*phiv*tauv/phi
+    Tmp = Y
+    Tmp[,1] = (N-n)*phiv*tauv/phi
     Yh = array(0,c(S,2^J,H))
     for(h in 1:H) Yh[,,h] = Tmp*Pp[,,h]
-# update be
+# update beta
     if(H>1){
       Cl = apply(Yh,c(1,3),sum)
       tot = rowSums(Cl)
-      sc = rep(0,np2); Fi = matrix(0,np2,np2)
+      sc = rep(0,np2)
+      Fi = matrix(0,np2,np2)
       for(s in 1:S){
         Ls = as.matrix(L[s,,])
         sc = sc+t(Ls)%*%(Cl[s,]-tot[s]*Piv[s,])
         Om = diag(Piv[s,])-Piv[s,]%o%Piv[s,]
         Fi = Fi+tot[s]*t(Ls)%*%Om%*%Ls
       }
-      dbe = c(solve(Fi,sc))
-      mdbe = max(abs(dbe))
-      if(mdbe>0.1) dbe = dbe/mdbe*0.25
-      be = be+dbe
+      if(rcond(Fi)>10^-15) dbeta = c(solve(Fi,sc)) else dbeta = c(ginv(Fi)%*%sc)
+      mdbeta = max(abs(dbeta))
+      if(mdbeta>0.1) dbeta = dbeta/mdbeta*0.25
+      beta = beta+dbeta
     }
-# update La
-    sc = rep(0,np1); Fi = rep(0,np1,np1)
+# update lambda
+    sc = rep(0,np1)
+    Fi = rep(0,np1,np1)
     for(h in 1:H) for(s in 1:S){
       if(is.null(X)) Mhs = M[,,h,1] else Mhs = M[,,h,s]
+      Mhs = matrix(Mhs,dM1,dM2)
       if(model=="loglin"){
         sc = sc+t(Mhs)%*%(Yh[s,,h]-sum(Yh[s,,h])*Q[s,,h])
         Tmp = sum(Yh[s,,h])*(diag(Q[s,,h])-Q[s,,h]%o%Q[s,,h])
         Fi = Fi+t(Mhs)%*%Tmp%*%Mhs
       }
       if(model=="logit"){
-        rho = exp(c(Mhs%*%la)); rho = rho/(1+rho)
+        rho = exp(c(Mhs%*%lambda))
+        rho = rho/(1+rho)
         sc = sc+t(Mhs)%*%(t(A)-rho*t(B))%*%Yh[s,,h]
         Tmp = sum(Yh[s,,h])*(diag(Q[s,,h])-Q[s,,h]%o%Q[s,,h])
         tmp = rho*(1-rho)*c(t(B)%*%Yh[s,,h])
         Fi = Fi+t(Mhs)%*%(tmp*Mhs)
       }
     }
-    if(rcond(Fi)>10^-15) dla = c(solve(Fi,sc)) else dla = c(ginv(Fi)%*%sc)
-    mdla = max(abs(dla))
-    if(mdla>0.1) dla = dla/mdla*0.1
-    la = la+dla
+    if(rcond(Fi)>10^-15) dlambda = c(solve(Fi,sc)) else dlambda = c(ginv(Fi)%*%sc)
+    mdlambda = max(abs(dlambda))
+    if(mdlambda>0.1) dlambda = dlambda/mdlambda*0.1
+    lambda = lambda+dlambda
 # compute probabilities
     if(H>1){
       Piv = matrix(0,S,H)
       for(s in 1:S){
         Ls = as.matrix(L[s,,])
-        tmp = exp(Ls%*%be)
+        tmp = exp(Ls%*%beta)
         Piv[s,] = tmp/sum(tmp)
       }
     }
@@ -195,10 +219,10 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
       for(h in 1:H){
         if(is.null(X)) Msh = as.matrix(M[,,h,1]) else Msh = as.matrix(M[,,h,s])
         if(model=="loglin"){
-          tmp = exp(c(Msh%*%la))
+          tmp = exp(c(Msh%*%lambda))
           Q[s,,h] = tmp/sum(tmp)
         }
-        if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%la-B%*%log(1+exp(Msh%*%la)))
+        if(model=="logit") Q[s,,h] = exp(A%*%Msh%*%lambda-B%*%log(1+exp(Msh%*%lambda)))
       }
       if(H>1){
         Pj[s,,] = Q[s,,]*(rep(1,2^J)%o%Piv[s,])
@@ -207,7 +231,7 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     }
     if(H==1){
       Pj = Q
-      Pm = Q[,,1]
+      Pm = matrix(Q[,,1],S,2^J)
     }
     phiv = Pm[,1]
     phi = sum(tauv*phiv)
@@ -243,20 +267,22 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     if(it%%10>0) cat(sprintf("%11g", c(it,lk,lk-lko,N)), "\n", sep = " | ")
     cat("------------|-------------|-------------|-------------|\n")
   }
-  if(H>1) names(be) = be_names
-  names(la) = out$par_list
+  if(H>1) names(beta) = beta_names
+  names(lambda) = out$par_list
 
 
 #---- standard errors ----
   if(se_out){
-    th = c(N,be,la)
+    th = c(N,beta,lambda)
     out = lkLCCR(th,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)
-    lke = out$lk; st = out$st
+    lke = out$lk
+    st = out$st
 # compute numerical derivative
     tol = 10^-6
     DD = matrix(0,1+np1+np2,1+np1+np2)
     for(j in 1:(1+np1+np2)){
-      th1 = th; th1[j] = th1[j]+tol
+      th1 = th
+      th1[j] = th1[j]+tol
       DD[,j] = (lkLCCR(th1,np1,np2,model,H,J,S,L,M,tauv,X,nv,n,Y1,A,B,sc=TRUE)$st-st)/tol
     }
     DD = (DD+t(DD))/2
@@ -265,24 +291,26 @@ function(Y,H,model=c("loglin","logit"),W=NULL,X=NULL,N=NULL,biv=NULL,
     se = sqrt(tmp)
     seN = se[1]
     if(H==1){
-      sebe = NULL
+      sebeta = NULL
     }else{
-      sebe = se[1+(1:np2)]
-      names(sebe) = names(be)
+      sebeta = se[1+(1:np2)]
+      names(sebeta) = names(beta)
     }
-    sela = se[1+np2+(1:np1)]
-    names(sela) = names(la)
+    selambda = se[1+np2+(1:np1)]
+    names(selambda) = names(lambda)
   }
 
 #---- output ----
   AIC = -2*lk+2*(np)
   BIC = -2*lk+log(n)*(np)
-  out = list(be=be,la=la,lk=lk,N=N,np=np,AIC=AIC,BIC=BIC,M=M,tauv=tauv,phiv=phiv,
-             lk1=lk1,lk2=lk2,lk3=lk3,lk4=lk4,call = match.call(),
+  out = list(beta=beta,lambda=lambda,lk=lk,N=N,np=np,AIC=AIC,BIC=BIC,M=M,tauv=tauv,phiv=phiv,
+             Piv=Piv,Q=Q,lk1=lk1,lk2=lk2,lk3=lk3,lk4=lk4,call = match.call(),
              Y=Y,H=H,model=model,W=W,X=X,biv=biv,flag=flag,main=main,
              free_cov=free_cov,free_biv=free_biv,free_flag=free_flag,se_out=se_out)
   if(se_out){
-    out$seN = seN; out$sebe = sebe; out$sela = sela
+    out$seN = seN
+    out$sebeta = sebeta
+    out$selambda = selambda
   }
   class(out) = "estLCCR"
   return(out)

@@ -1,6 +1,6 @@
-plot.confLCCR <-
-function(x,...){
+plot.confLCCR = function(x,...){
 
+#---- plot of confidence interval starting from output of confLCCR ---
   mlk = min(x$lkv)
   plot(x$Nv,x$lkv,type="l",xlab=expression(italic(N)),ylab="LogLik",col=4)
   lines(c(x$conf[1],x$conf[1]),c(mlk,x$lk1),col=2)

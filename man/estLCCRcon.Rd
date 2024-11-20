@@ -14,7 +14,7 @@ estLCCRcon(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv
         free_cov = c("no", "class", "resp", "both"),
         free_biv = c("no", "class", "int", "both"),
         free_flag = c("no", "class", "resp", "both"),
-        N0 = NULL, be0 = NULL, la0 = NULL, maxit = 5000,
+        beta0 = NULL, lambda0 = NULL, control = list(),
         verb = TRUE, init_rand = FALSE, se_out = FALSE)
 }
 
@@ -31,28 +31,30 @@ estLCCRcon(Y, H, model = c("loglin", "logit"), W = NULL, X = NULL, N = NULL, biv
   \item{free_cov}{"no" for constant effect of the covariates across capture occasions and latent classes; "class" for effect of covariates varying only with the latent class; "resp" for effect of covariates varying only with the capture occasion; "both" for effect of covariates varying with the capture occasion and the latent class}
   \item{free_biv}{"no" for constant bivariate interation effect with respect to the occasion and the latent class; "class" for free interaction with respect to the latent class; "int" for free effect only with respect to the interation; "both" for free effect with respect to interation and latent class (for loglinear parametrization)}
   \item{free_flag}{"no" for constant effect of the previous capture occasions with respect to the occasion and the latent class; "class" for free effect only with respect to the latent class; "int" for free effect only with respect to the occasion; "both" for free effect with respect to capture occasion and latent class (for recursive logit parametrization)}
-  \item{N0}{initial value of the population size}
-  \item{be0}{initial value of the parameters affecting the class weights}
-  \item{la0}{initial value of the parameters affecting the conditional distribution of capture configurations given the latent class}
-  \item{maxit}{maximum number of iterations of the EM algorithm}
+  \item{beta0}{initial value of the parameters affecting the class weights}
+  \item{lambda0}{initial value of the parameters affecting the conditional distribution of capture configurations given the latent class}
+  \item{control}{a list containing control arguments for the maximum number of iterations of the EM algorithm (\code{maxit}, default value 5000) and relative tollerance (\code{reltol}, default value \eqn{10^{-10}})}
   \item{verb}{to have partial output during the model fitting}
   \item{init_rand}{to use a random initialization of the parameters}
   \item{se_out}{to require computation of the standard errors}
 }
 
 \value{
-  \item{be}{estimate of the parameters affecting the class weights}
-  \item{la}{estimate of the parameters affecting the conditional distribution of capture configurations given the latent class}
+  \item{beta}{estimate of the parameters affecting the class weights}
+  \item{lambda}{estimate of the parameters affecting the conditional distribution of capture configurations given the latent class}
   \item{lk}{final log-likelihood value}
+  \item{dev}{final value of the deviance that is used to build confidence intervals}
   \item{N}{estimate of the population size}
   \item{np}{number of free parameters}
   \item{AIC}{value of AIC for model selection}
   \item{BIC}{value of BIC for model selection}
   \item{M}{design matrices used for the recursive logit or loglinear parametrization of the conditional distribution of capture configurations given the latent class}
   \item{phiv}{estimate of the probability of being never captured for each stratum}
+  \item{Piv}{matrix of the probabilities of the latent classes for each stratum}
+  \item{Q}{array of the conditional probabilities of the capture configurations given each latent class and stratum}
   \item{seN}{standard error for the estimate of N}
-  \item{sebe}{standard error for the estimate of beta}
-  \item{sela}{standard error for the estimate of lambda}
+  \item{sebeta}{standard error for the estimate of beta}
+  \item{selambda}{standard error for the estimate of lambda}
 }
 
 \references{

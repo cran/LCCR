@@ -1,6 +1,7 @@
 \name{plot}
 \docType{methods}
 \alias{plot.confLCCR}
+\alias{plot.confLCCRcon}
 
 \title{Plot profile confidence interval}
 

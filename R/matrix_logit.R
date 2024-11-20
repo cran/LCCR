@@ -1,9 +1,9 @@
-matrix_logit <-
-function(J){
+matrix_logit = function(J){
 
-# preliminaries
+#---- preliminaries ----
   S = sq(J)
-# build matrix
+
+#---- build desisgn matrices ----
   A = as.matrix(S[,1])
   B = matrix(1,2^J,1)
   if(J>1) for(j in 2:J){
@@ -13,7 +13,8 @@ function(J){
     A = cbind(A,S[,j]*Tmp)
     B = cbind(B,Tmp)
   }
-# output
+
+#---- output ----
   out = list(A=A,B=B)
 
 }

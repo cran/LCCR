@@ -1,4 +1,4 @@
-17d4379803854073f42c33ab2d49e5c4 *DESCRIPTION
+75a3783cde5f1e0e225f6582295cfdaf *DESCRIPTION
 e9cb8761d8cc930194b6769aa4bde998 *NAMESPACE
 8a55ef1e9eb050ac57277b685057c592 *R/aggr_data.R
 3b4a09094ad243997b05c1bb6ecb7a7c *R/confint.estLCCR.R
@@ -19,11 +19,11 @@ a73e224ea9ffed979780454d3f620f59 *R/print.estLCCR.R
 62108553de2015e6b84ff1728bff2cc5 *R/print.estLCCRcon.R
 2c7a74c919beb7c666aac1e47e6f0138 *R/simLCCR.R
 34c84f75c45d3531ed37e9165960f2e0 *R/sq.R
-95bab2156637fbb2cc737f40aec6bb32 *R/summary.confLCCR.R
-13666bb071aadad62244b5115641f391 *R/summary.confLCCRcon.R
+e47be270ac34013dc36a16a0956bf5d4 *R/summary.confLCCR.R
+1743cb34b0063bb584c4c97a4df85461 *R/summary.confLCCRcon.R
 1e50f7185ae2cf9bac2d5ad8c273135d *R/summary.estLCCR.R
 1f966546ae73db9465cf58f62f4bea48 *R/summary.estLCCRcon.R
-6028d8c48f335ee296bc35523fb509e5 *build/partial.rdb
+f75bb8db1400c09566e9574f8fee5c40 *build/partial.rdb
 1343b3e1edfe563f79aa14411ac23421 *data/data_sim1.rda
 902d54a036ac6ee1049ac64c1a2e3e6d *data/data_sim2.rda
 da5fd3ecfb6b32e7449bbe515ffde624 *data/data_sim3.rda

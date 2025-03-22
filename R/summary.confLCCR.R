@@ -8,7 +8,7 @@ summary.confLCCR = function(object, ...){
   print(object$call)
   cat("\nAvailable objects:\n")
   print(names(object))
-  cat("\nLevl:\n")
+  cat("\nLevel:\n")
   print(object$level)
   cat("\nInterval limits:\n")
   print(object$conf)
